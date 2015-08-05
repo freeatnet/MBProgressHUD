@@ -69,6 +69,7 @@ static const CGFloat kDetailsLabelFontSize = 12.f;
 @property (atomic, MB_STRONG) NSTimer *graceTimer;
 @property (atomic, MB_STRONG) NSTimer *minShowTimer;
 @property (atomic, MB_STRONG) NSDate *showStarted;
+@property (atomic) BOOL isHiding;
 
 @end
 
@@ -106,6 +107,7 @@ static const CGFloat kDetailsLabelFontSize = 12.f;
 @synthesize progress;
 @synthesize size;
 @synthesize activityIndicatorColor;
+@synthesize isHiding;
 #if NS_BLOCKS_AVAILABLE
 @synthesize completionBlock;
 #endif
@@ -143,7 +145,10 @@ static const CGFloat kDetailsLabelFontSize = 12.f;
 	NSEnumerator *subviewsEnum = [view.subviews reverseObjectEnumerator];
 	for (UIView *subview in subviewsEnum) {
 		if ([subview isKindOfClass:self]) {
-			return (MBProgressHUD *)subview;
+            MBProgressHUD *hudView = (MBProgressHUD *)subview;
+            if (!hudView.isHiding) {
+                return (MBProgressHUD *)subview;
+            }
 		}
 	}
 	return nil;
@@ -154,7 +159,10 @@ static const CGFloat kDetailsLabelFontSize = 12.f;
 	NSArray *subviews = view.subviews;
 	for (UIView *aView in subviews) {
 		if ([aView isKindOfClass:self]) {
-			[huds addObject:aView];
+            MBProgressHUD *hudView = (MBProgressHUD *)aView;
+            if (!hudView.isHiding) {
+                [huds addObject:aView];
+            }
 		}
 	}
 	return [NSArray arrayWithArray:huds];
@@ -187,6 +195,7 @@ static const CGFloat kDetailsLabelFontSize = 12.f;
 		self.removeFromSuperViewOnHide = NO;
 		self.minSize = CGSizeZero;
 		self.square = NO;
+        self.isHiding = NO;
 		self.contentMode = UIViewContentModeCenter;
 		self.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin
 								| UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -333,6 +342,8 @@ static const CGFloat kDetailsLabelFontSize = 12.f;
 
 - (void)hideUsingAnimation:(BOOL)animated {
 	// Fade out
+    self.isHiding = YES;
+    
 	if (animated && showStarted) {
 		[UIView beginAnimations:nil context:NULL];
 		[UIView setAnimationDuration:0.30];
